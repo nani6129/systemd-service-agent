@@ -5,30 +5,27 @@ OPERATIONS = {
     "status", "enable", "disable",
 }
 
-
 def parse_request(request):
-    """Parse a simple natural-language service request into an intent."""
+    """Parse a natural-language service request into an approved intent."""
     if not isinstance(request, str) or not request.strip():
         return None
 
     text = request.lower().strip()
 
-    # Reject unrelated or explicitly destructive requests.
     blocked = (
-        "delete everything",
-        "erase the disk",
-        "format the drive",
-        "remove all files",
+        "delete everything", "erase the disk",
+        "format the drive", "remove all files",
     )
     if any(phrase in text for phrase in blocked):
         return None
 
-    # Identify the requested operation.
+    # Identify the operation, prioritizing specific phrases.
     if re.search(r"\b(disable|turn off)\b", text):
         operation = "disable"
     elif re.search(
-        r"\b(enable|automatically start|start on boot|"
-        r"start at boot|at boot|on boot)\b", text
+        r"\b(enable|automatically start|start automatically|"
+        r"start on boot|start at boot|starts automatically|"
+        r"when the computer boots|at boot|on boot)\b", text
     ):
         operation = "enable"
     elif re.search(r"\b(restart|reboot)\b", text):
@@ -38,32 +35,33 @@ def parse_request(request):
     elif re.search(r"\b(start|launch)\b", text):
         operation = "start"
     elif re.search(
-        r"\b(status|running|active|check|show)\b", text
+        r"\b(status|running|active|check|show|display)\b", text
     ):
         operation = "status"
     else:
         return None
 
-    # Prefer a service name explicitly following "service" or "daemon".
+    # Prefer the service name after "service" or "daemon".
     match = re.search(
-        r"\b(?:service|daemon)\s+([a-zA-Z0-9_.@:-]+)\b",
+        r"\b(?:service|daemon)\s+([a-zA-Z0-9_.@:-]+)",
         text,
     )
-
     if match:
         service = match.group(1)
     else:
-        # Remove common instruction words, then identify a candidate.
         words = re.findall(r"[a-zA-Z0-9_.@:-]+", text)
         ignored = {
             "please", "check", "whether", "if", "is", "are",
-            "the", "a", "an", "my", "me", "tell", "show",
-            "get", "find", "make", "sure", "that", "and",
-            "automatically", "start", "stop", "restart",
-            "reboot", "status", "enable", "disable", "active",
-            "running", "currently", "now", "at", "on", "boot",
-            "computer", "system", "turn", "off", "up", "launch",
-            "shut", "down", "service", "daemon",
+            "the", "a", "an", "me", "my", "tell", "find", "of",
+            "get", "make", "sure", "that", "and", "when",
+            "computer", "boots", "boot", "automatically",
+            "start", "starts", "started", "stop", "stops",
+            "restart", "reboot", "enable", "enabled",
+            "disable", "disabled", "status", "running",
+            "active", "currently", "now", "on", "at", "up",
+            "show", "display", "turn", "off", "shut", "down",
+            "service", "daemon", "launch", "whether",
+            "automatically",
         }
         candidates = [
             word for word in words
