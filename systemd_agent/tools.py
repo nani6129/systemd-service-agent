@@ -71,3 +71,44 @@ def enable_service(service):
 
 def disable_service(service):
     return run_service_operation("disable", service)
+def list_services():
+    """List currently loaded systemd services."""
+    try:
+        result = subprocess.run(
+            [
+                "systemctl",
+                "list-units",
+                "--type=service",
+                "--all",
+                "--no-pager",
+                "--plain",
+            ],
+            capture_output=True,
+            text=True,
+            timeout=20,
+            check=False,
+        )
+
+        output = (result.stdout + result.stderr).strip()
+
+        return {
+            "success": result.returncode == 0,
+            "operation": "list",
+            "message": output or (
+                "Services listed"
+                if result.returncode == 0
+                else "Failed to list services"
+            ),
+            "return_code": result.returncode,
+        }
+
+    except FileNotFoundError:
+        return {
+            "success": False,
+            "message": "systemctl not found",
+        }
+    except subprocess.TimeoutExpired:
+        return {
+            "success": False,
+            "message": "Operation timed out",
+        }

@@ -2,7 +2,7 @@ import re
 
 OPERATIONS = {
     "start", "stop", "restart",
-    "status", "enable", "disable",
+    "status", "enable", "disable","lisr",
 }
 
 def parse_request(request):
@@ -35,12 +35,21 @@ def parse_request(request):
     elif re.search(r"\b(start|launch)\b", text):
         operation = "start"
     elif re.search(
-        r"\b(status|running|active|check|show|display)\b", text
+        r"\b(list|show)\b.*\b(services|service units)\b"
+        r"|\b(list|show)\s+(all\s+)?services\b",
+        text,
+    ):
+        operation = "list"
+    elif re.search(
+        r"\b(status|running|active|check|show|display)\b",
+        text,
     ):
         operation = "status"
     else:
         return None
-
+    # Handle listing services without requiring a service name.
+    if operation == "list":
+        return {"operation": "list", "service": "all"}
     # Prefer the service name after "service" or "daemon".
     match = re.search(
         r"\b(?:service|daemon)\s+([a-zA-Z0-9_.@:-]+)",
@@ -62,6 +71,7 @@ def parse_request(request):
             "show", "display", "turn", "off", "shut", "down",
             "service", "daemon", "launch", "whether",
             "automatically",
+            "list", "all", "services", "units",
         }
         candidates = [
             word for word in words
