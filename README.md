@@ -1,4 +1,4 @@
-# Systemd Service Agent
+on# Systemd Service Agent
 
 An Operating Systems project that provides a Python terminal interface
 for managing Linux services through systemctl.
@@ -13,6 +13,8 @@ for managing Linux services through systemctl.
 - Confirm state-changing operations
 - Capture command output and errors
 - Automated unit tests
+- Accept simple natural-language service requests
+- Parse requests into approved operations and service names
 
 ## Requirements
 
@@ -26,4 +28,5 @@ Clone the repository, then enter the project directory:
 
 ```bash
 cd systemd-service-agent
+python3 -m systemd_agent.agent
 python3 -m systemd_agent.agent
