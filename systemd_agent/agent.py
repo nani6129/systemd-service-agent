@@ -1,3 +1,5 @@
+from .intent_parser import parse_request
+
 from .tools import (
     start_service,
     stop_service,
@@ -33,13 +35,22 @@ def main():
         if request.lower() == "exit":
             break
 
+        # Keep the original command format, and also accept natural language.
         parts = request.split()
-        if len(parts) != 2:
-            print("Use: <operation> <service>")
-            continue
 
-        operation, service = parts
-        tool = TOOLS.get(operation.lower())
+        if len(parts) == 2 and parts[0].lower() in TOOLS:
+            operation, service = parts
+            operation = operation.lower()
+        else:
+            intent = parse_request(request)
+            if intent is None:
+                print("Could not understand request. Try: status cron")
+                continue
+
+            operation = intent["operation"]
+            service = intent["service"]
+
+        tool = TOOLS.get(operation)
 
         if tool is None:
             print("Unknown operation.")
